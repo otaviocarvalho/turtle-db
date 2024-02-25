@@ -36,6 +36,11 @@ type Statement struct {
 	Type StatementType
 }
 
+var statementType = map[string]StatementType{
+	"insert": StatementInsert,
+	"select": StatementSelect,
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -44,7 +49,7 @@ func main() {
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
-		if input[0] == '.' {
+		if strings.HasPrefix(input, ".") {
 			switch doMetaCommand(input) {
 			case MetaCommandSuccess:
 				continue
@@ -55,16 +60,12 @@ func main() {
 		}
 
 		var statement Statement
-		switch prepareStatement(input, &statement) {
-		case PrepareSuccessStatement:
-			break
-		case PrepareUnrecognizedStatement:
-			fmt.Printf("Unrecognized keyword at the start of '%s'.\n", input)
-			continue
+		if result, ok := prepareStatement(input, &statement); ok {
+			executeStatement(&statement)
+			fmt.Println("Executed.")
+		} else {
+			fmt.Printf("Unrecognized keyword at start of '%s'. PrepareResultStatement=%d\n", input, result)
 		}
-
-		executeStatement(&statement)
-		fmt.Printf("Executed.\n")
 	}
 }
 
@@ -75,24 +76,24 @@ func doMetaCommand(input string) MetaCommandResult {
 	return MetaCommandUnrecognized
 }
 
-func prepareStatement(input string, statement *Statement) PrepareResultStatement {
-	if strings.HasPrefix(input, "insert") {
-		statement.Type = StatementInsert
-		return PrepareSuccessStatement
-	} else if strings.HasPrefix(input, "select") {
-		statement.Type = StatementSelect
-		return PrepareSuccessStatement
+func prepareStatement(input string, statement *Statement) (PrepareResultStatement, bool) {
+	for keyword, stmtType := range statementType {
+		if strings.HasPrefix(input, keyword) {
+			statement.Type = stmtType
+			return PrepareSuccessStatement, true
+		}
 	}
 
-	return PrepareUnrecognizedStatement
+	return PrepareUnrecognizedStatement, false
 }
 
 func executeStatement(statement *Statement) {
 	switch statement.Type {
 	case StatementInsert:
 		fmt.Println("This is where we should do an insert.")
-		break
 	case StatementSelect:
 		fmt.Println("This is where we should do a select.")
+	default:
+		fmt.Println("Execution operation not handled.")
 	}
 }
