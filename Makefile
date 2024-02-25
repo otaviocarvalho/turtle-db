@@ -1,6 +1,12 @@
 APPNAME=turtle-cli
 
-.PHONY = build run
+.PHONY = build run fmt vet
+
+fmt: 
+	go fmt ./...
+
+vet: 
+	go vet ./...
 
 build:
 	go build -o $(APPNAME) ./cmd/turtle-cli
