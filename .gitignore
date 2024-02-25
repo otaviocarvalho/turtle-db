@@ -31,3 +31,6 @@ go.work
 /test/data
 /test/scenarios/inherited/.envrc
 .envrc
+
+# Go build
+turtle-cli
